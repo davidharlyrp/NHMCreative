@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 350 75% 85%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 260 60% 92%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 160 55% 88%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 350 75% 85%;
+    --radius: 0.625rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 350 75% 85%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 260 60% 92%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 350 75% 85%;
+    
+    /* Custom Pastel Colors */
+    --pastel-pink: 350 100% 93%;
+    --pastel-lavender: 260 60% 92%;
+    --pastel-mint: 160 55% 88%;
+    --pastel-peach: 25 100% 90%;
+    --pastel-blue: 200 70% 90%;
+    --pastel-lemon: 55 90% 88%;
+    --pastel-rose: 340 80% 92%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .gradient-pastel {
+    background: linear-gradient(135deg, hsl(var(--pastel-pink)) 0%, hsl(var(--pastel-lavender)) 50%, hsl(var(--pastel-mint)) 100%);
+  }
+  
+  .gradient-hero {
+    background: linear-gradient(135deg, #FFF5F7 0%, #F8F5FF 50%, #F0FFF8 100%);
+  }
+  
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(350 75% 75%) 0%, hsl(260 60% 70%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.1);
+  }
+}
