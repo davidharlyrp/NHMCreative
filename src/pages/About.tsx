@@ -1,8 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Sparkles, 
-  Target, 
-  Heart, 
+import {
+  Sparkles,
+  Target,
+  Heart,
   Zap,
   Calendar,
   FileSpreadsheet,
@@ -48,10 +48,10 @@ export default function About() {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            Tentang <span className="text-pink-500">NHCreative</span>
+            Tentang <span className="text-pink-500">NHMCreative</span>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Kami adalah tim kreatif yang berdedikasi untuk membantu assistant dan virtual assistant 
+            Kami adalah tim kreatif yang berdedikasi untuk membantu assistant dan virtual assistant
             bekerja lebih efisien melalui produk digital berkualitas.
           </p>
         </div>
@@ -62,17 +62,17 @@ export default function About() {
             <h2 className="text-3xl font-bold text-gray-800 mb-6">Cerita Kami</h2>
             <div className="space-y-4 text-gray-600 leading-relaxed">
               <p>
-                NHCreative dimulai dari pengalaman pribadi bekerja sebagai virtual assistant. 
-                Kami menyadari betapa pentingnya memiliki tools yang tepat untuk mengelola 
+                NHMCreative dimulai dari pengalaman pribadi bekerja sebagai virtual assistant.
+                Kami menyadari betapa pentingnya memiliki tools yang tepat untuk mengelola
                 tugas-tugas harian dengan efisien.
               </p>
               <p>
-                Pada tahun 2023, kami memutuskan untuk membuat produk digital yang tidak hanya 
-                fungsional, tetapi juga estetis dan mudah digunakan. Setiap produk dirancang 
+                Pada tahun 2023, kami memutuskan untuk membuat produk digital yang tidak hanya
+                fungsional, tetapi juga estetis dan mudah digunakan. Setiap produk dirancang
                 dengan mempertimbangkan kebutuhan nyata assistant modern.
               </p>
               <p>
-                Hari ini, kami bangga telah membantu ribuan assistant dan VA di seluruh Indonesia 
+                Hari ini, kami bangga telah membantu ribuan assistant dan VA di seluruh Indonesia
                 untuk meningkatkan produktivitas dan kualitas pekerjaan mereka.
               </p>
             </div>
@@ -171,8 +171,8 @@ export default function About() {
           <div className="relative">
             <h2 className="text-3xl font-bold text-white mb-4">Misi Kami</h2>
             <p className="text-white/90 text-lg max-w-3xl mx-auto leading-relaxed">
-              Memberdayakan assistant dan virtual assistant di Indonesia dengan menyediakan 
-              produk digital berkualitas tinggi yang membuat pekerjaan mereka lebih efisien, 
+              Memberdayakan assistant dan virtual assistant di Indonesia dengan menyediakan
+              produk digital berkualitas tinggi yang membuat pekerjaan mereka lebih efisien,
               terorganisir, dan profesional.
             </p>
           </div>

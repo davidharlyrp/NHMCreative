@@ -23,14 +23,14 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
       toast.success('Berhasil masuk sebagai admin!');
       navigate('/admin');
     } else {
       toast.error(result.error || 'Gagal masuk. Periksa email dan password Anda.');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -119,7 +119,7 @@ export default function AdminLogin() {
             <div className="mt-8 pt-6 border-t border-gray-100">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                 <Sparkles className="w-4 h-4 text-pink-400" />
-                <span>NHCreative Admin Dashboard</span>
+                <span>NHMCreative Admin Dashboard</span>
               </div>
             </div>
           </CardContent>

@@ -232,11 +232,11 @@ export default function AdminProducts() {
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-semibold text-gray-800">
-              NH<span className="text-pink-400">Creative</span>
+              NHM<span className="text-pink-400">Creative</span>
             </span>
           </Link>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const isActive = item.href === '/admin/products';
@@ -244,11 +244,10 @@ export default function AdminProducts() {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
                     ? 'bg-pink-50 text-pink-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  }`}
               >
                 <item.icon className="w-5 h-5" />
                 {item.name}
@@ -290,7 +289,7 @@ export default function AdminProducts() {
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg font-semibold text-gray-800">
-                NH<span className="text-pink-400">Creative</span>
+                NHM<span className="text-pink-400">Creative</span>
               </span>
             </Link>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
@@ -635,7 +634,7 @@ export default function AdminProducts() {
           <DialogHeader>
             <DialogTitle>Hapus Produk</DialogTitle>
             <DialogDescription>
-              Apakah Anda yakin ingin menghapus produk "{selectedProduct?.name}"? 
+              Apakah Anda yakin ingin menghapus produk "{selectedProduct?.name}"?
               Tindakan ini tidak dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>

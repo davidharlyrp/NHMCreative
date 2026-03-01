@@ -35,7 +35,7 @@ export default function Navbar() {
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <span className="text-xl font-semibold text-gray-800">
-              NH<span className="text-pink-400">Creative</span>
+              NHM<span className="text-pink-400">Creative</span>
             </span>
           </Link>
 
@@ -45,9 +45,8 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 to={link.href}
-                className={`text-sm font-medium transition-colors hover:text-pink-500 ${
-                  isActive(link.href) ? 'text-pink-500' : 'text-gray-600'
-                }`}
+                className={`text-sm font-medium transition-colors hover:text-pink-500 ${isActive(link.href) ? 'text-pink-500' : 'text-gray-600'
+                  }`}
               >
                 {link.name}
               </Link>
@@ -114,11 +113,10 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isActive(link.href)
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isActive(link.href)
                       ? 'bg-pink-50 text-pink-500'
                       : 'text-gray-600 hover:bg-pink-50 hover:text-pink-500'
-                  }`}
+                    }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {link.name}

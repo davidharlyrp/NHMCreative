@@ -5,12 +5,12 @@ import type { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Calendar, 
-  FileSpreadsheet, 
-  LayoutTemplate, 
+import {
+  Sparkles,
+  ArrowRight,
+  Calendar,
+  FileSpreadsheet,
+  LayoutTemplate,
   Package,
   Star,
   CheckCircle2,
@@ -71,13 +71,13 @@ export default function Home() {
 
   const loadProducts = async () => {
     setIsLoading(true);
-    
+
     // Load featured products
     const featuredResult = await productHelpers.getFeatured();
     if (featuredResult.success && featuredResult.data) {
       setFeaturedProducts(featuredResult.data as unknown as Product[]);
     }
-    
+
     setIsLoading(false);
   };
 
@@ -116,7 +116,7 @@ export default function Home() {
         <div className="absolute inset-0 gradient-hero opacity-50"></div>
         <div className="absolute top-20 right-10 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
         <div className="absolute bottom-20 left-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
             <Badge className="mb-6 bg-pink-100 text-pink-600 hover:bg-pink-100 border-0">
@@ -128,7 +128,7 @@ export default function Home() {
               <span className="text-gradient">Produk Digital</span> Profesional
             </h1>
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              Kumpulan planner, spreadsheet, dan template berkualitas yang dirancang khusus 
+              Kumpulan planner, spreadsheet, dan template berkualitas yang dirancang khusus
               untuk assistant dan virtual assistant. Hemat waktu, tingkatkan efisiensi.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -288,10 +288,10 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-800 mb-6">
-                Kenapa Memilih <span className="text-pink-500">NHCreative</span>?
+                Kenapa Memilih <span className="text-pink-500">NHMCreative</span>?
               </h2>
               <p className="text-gray-600 mb-8">
-                Kami berkomitmen menyediakan produk digital berkualitas tinggi yang membantu 
+                Kami berkomitmen menyediakan produk digital berkualitas tinggi yang membantu
                 assistant dan virtual assistant bekerja lebih efisien dan profesional.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -347,7 +347,7 @@ export default function Home() {
                 Siap Meningkatkan Produktivitas?
               </h2>
               <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-                Bergabung dengan ribuan assistant dan VA yang sudah menggunakan produk kami. 
+                Bergabung dengan ribuan assistant dan VA yang sudah menggunakan produk kami.
                 Dapatkan diskon spesial untuk pembelian pertama!
               </p>
               <Button size="lg" className="bg-white text-pink-500 hover:bg-gray-100" asChild>

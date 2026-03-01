@@ -31,7 +31,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast.error('Password tidak cocok');
       return;
@@ -45,14 +45,14 @@ export default function Register() {
     setIsLoading(true);
 
     const result = await register(formData.email, formData.password, formData.name);
-    
+
     if (result.success) {
       toast.success('Akun berhasil dibuat! Selamat datang.');
       navigate('/');
     } else {
       toast.error(result.error || 'Gagal membuat akun. Silakan coba lagi.');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -74,10 +74,10 @@ export default function Register() {
                 <Sparkles className="w-8 h-8 text-white" />
               </Link>
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
-                Bergabung dengan NHCreative
+                Bergabung dengan NHMCreative
               </h1>
               <p className="text-gray-600 leading-relaxed">
-                Daftar sekarang dan dapatkan akses ke koleksi produk digital terbaik 
+                Daftar sekarang dan dapatkan akses ke koleksi produk digital terbaik
                 untuk assistant dan virtual assistant.
               </p>
             </div>
@@ -95,7 +95,7 @@ export default function Register() {
 
             <div className="mt-8 p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl">
               <p className="text-gray-600 italic">
-                "Produk dari NHCreative sangat membantu saya mengelola tugas harian 
+                "Produk dari NHMCreative sangat membantu saya mengelola tugas harian
                 sebagai virtual assistant. Sangat recommended!"
               </p>
               <p className="text-sm text-gray-500 mt-3">— Sarah, Virtual Assistant</p>
@@ -182,7 +182,7 @@ export default function Register() {
                     <Checkbox
                       id="agreeTerms"
                       checked={formData.agreeTerms}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         setFormData(prev => ({ ...prev, agreeTerms: checked as boolean }))
                       }
                       className="mt-1"

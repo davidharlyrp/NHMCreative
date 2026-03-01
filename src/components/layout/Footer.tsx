@@ -37,11 +37,11 @@ export default function Footer() {
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <span className="text-xl font-semibold text-gray-800">
-                NH<span className="text-pink-400">Creative</span>
+                NHM<span className="text-pink-400">Creative</span>
               </span>
             </Link>
             <p className="text-gray-500 text-sm mb-6 max-w-xs">
-              Produk digital berkualitas untuk assistant dan virtual assistant. 
+              Produk digital berkualitas untuk assistant dan virtual assistant.
               Tingkatkan produktivitas dengan planner, spreadsheet, dan template profesional.
             </p>
             <div className="flex space-x-4">
@@ -112,7 +112,7 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-pink-100">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-gray-400">
-              &copy; {new Date().getFullYear()} NHCreative. All rights reserved.
+              &copy; {new Date().getFullYear()} NHMCreative. All rights reserved.
             </p>
             <p className="text-sm text-gray-400">
               Dibuat dengan ❤️ untuk assistant & VA
