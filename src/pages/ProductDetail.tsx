@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { productHelpers, orderHelpers, reviewHelpers } from '@/lib/pocketbase';
+import { productHelpers, orderHelpers, reviewHelpers, API_URL } from '@/lib/pocketbase';
 import type { Product } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -146,12 +146,13 @@ export default function ProductDetail() {
 
       if (orderResult.success && orderResult.data) {
         // Initialize Xendit payment via our secure backend
-        const response = await fetch('/api/payment/create', {
+        const response = await fetch(`${API_URL}/api/payment/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             orderId: orderResult.data.id,
             amount: product?.price,
+            productSlug: product?.slug,
             description: `Pembelian ${product?.name}`,
             customer: {
               email: user?.email,

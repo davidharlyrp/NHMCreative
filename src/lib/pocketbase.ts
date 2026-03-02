@@ -247,7 +247,7 @@ export const fileHelpers = {
   }
 };
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://api.nhmcreative.com';
 
 // Review helpers
 export const reviewHelpers = {
