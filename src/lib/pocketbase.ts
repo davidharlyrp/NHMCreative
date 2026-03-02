@@ -247,7 +247,7 @@ export const fileHelpers = {
   }
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:2091';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 // Review helpers
 export const reviewHelpers = {

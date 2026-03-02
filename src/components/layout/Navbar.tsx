@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, User, ShoppingBag, LogOut, ChevronDown, Sparkles } from 'lucide-react';
+import { Menu, X, User, ShoppingBag, LogOut, ChevronDown } from 'lucide-react';
 
 const navLinks = [
   { name: 'Beranda', href: '/' },
@@ -31,11 +31,10 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-300 to-pink-400 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <img src="/logo.png" alt="Logo" className="w-8 h-8" />
             <span className="text-xl font-semibold text-gray-800">
-              NHM<span className="text-pink-400">Creative</span>
+              Creative
+              {/* NHM<span className="text-pink-400">Creative</span> */}
             </span>
           </Link>
 
@@ -114,8 +113,8 @@ export default function Navbar() {
                   key={link.name}
                   to={link.href}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isActive(link.href)
-                      ? 'bg-pink-50 text-pink-500'
-                      : 'text-gray-600 hover:bg-pink-50 hover:text-pink-500'
+                    ? 'bg-pink-50 text-pink-500'
+                    : 'text-gray-600 hover:bg-pink-50 hover:text-pink-500'
                     }`}
                   onClick={() => setIsOpen(false)}
                 >
