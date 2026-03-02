@@ -17,6 +17,12 @@ const port = process.env.PORT || 2091;
 app.use(cors());
 app.use(express.json());
 
+// Global Request Logger
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
 // Initialize Xendit
 const xenditClient = new Xendit({
     secretKey: process.env.XENDIT_SECRET_KEY || '',
@@ -139,6 +145,14 @@ app.post('/api/payment/webhook', async (req, res) => {
         console.error('Webhook processing failed:', error);
         res.status(500).send('Internal Server Error');
     }
+});
+
+// Diagnostic route for unexpected URLs
+app.all('/api/payment/*', (req, res) => {
+    console.log('--- Unexpected Payment Route Hit ---');
+    console.log('URL:', req.url);
+    console.log('Method:', req.method);
+    res.status(404).send('Not Found - Check your Webhook URL');
 });
 
 app.listen(port, () => {
