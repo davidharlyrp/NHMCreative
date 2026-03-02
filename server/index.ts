@@ -127,7 +127,7 @@ app.post('/api/payment/webhook', async (req, res) => {
 
                 await adminPb.collection('orders').update(external_id, {
                     status: 'paid',
-                    xenditInvoiceId: id
+                    paymentId: id
                 });
                 console.log(`SUCCESS: Order ${external_id} updated to PAID`);
             } catch (pbError: any) {
