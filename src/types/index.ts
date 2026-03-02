@@ -12,7 +12,8 @@ export interface Product {
   features: string[];
   includes: string[];
   format: string;
-  fileSize?: string;
+  fileSize?: number;
+  file?: string[];
   salesCount: number;
   rating: number;
   reviewCount: number;

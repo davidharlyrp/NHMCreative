@@ -15,11 +15,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  Sparkles, 
-  Calendar, 
-  FileSpreadsheet, 
-  LayoutTemplate, 
+import {
+  Sparkles,
+  Calendar,
+  FileSpreadsheet,
+  LayoutTemplate,
   Package,
   Star,
   Check,
@@ -55,6 +55,7 @@ export default function ProductDetail() {
 
   const loadProduct = async () => {
     setIsLoading(true);
+    console.log('Fetching product with slug:', slug);
     const result = await productHelpers.getBySlug(slug!);
     if (result.success && result.data) {
       const prod = result.data as unknown as Product;
@@ -67,6 +68,9 @@ export default function ProductDetail() {
         setRelatedProducts(related.data.slice(0, 4) as unknown as Product[]);
       }
     } else {
+      if (result.isAbort) return; // Ignore autocancelled requests
+
+      console.error('Failed to load product:', result.error);
       toast.error('Produk tidak ditemukan');
       navigate('/products');
     }
@@ -92,14 +96,14 @@ export default function ProductDetail() {
       });
 
       if (orderResult.success && orderResult.data) {
-        // Initialize Xendit payment
+        // Initialize Xendit payment via our secure backend
         const response = await fetch('/api/payment/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             orderId: orderResult.data.id,
             amount: product?.price,
-            description: product?.name,
+            description: `Pembelian ${product?.name}`,
             customer: {
               email: user?.email,
               name: user?.name
@@ -107,8 +111,13 @@ export default function ProductDetail() {
           })
         });
 
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Gagal membuat pembayaran');
+        }
+
         const paymentData = await response.json();
-        
+
         if (paymentData.invoice_url) {
           // Redirect to payment
           window.location.href = paymentData.invoice_url;
@@ -129,6 +138,14 @@ export default function ProductDetail() {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   const getCategoryIcon = (category: string) => {
@@ -207,7 +224,7 @@ export default function ProductDetail() {
             <div className="aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
               {product.image ? (
                 <img
-                  src={product.image}
+                  src={productHelpers.getFileUrl(product, product.image)}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -235,9 +252,9 @@ export default function ProductDetail() {
               <CategoryIcon className="w-3 h-3 mr-1" />
               {getCategoryName(product.category)}
             </Badge>
-            
+
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">{product.name}</h1>
-            
+
             <div className="flex items-center gap-4 mb-6">
               <div className="flex items-center gap-1">
                 <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
@@ -257,6 +274,14 @@ export default function ProductDetail() {
                   {formatPrice(product.originalPrice)}
                 </span>
               )}
+            </div>
+
+            <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
+              <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-0 font-normal">
+                {product.format}
+              </Badge>
+              <span>•</span>
+              <span>{formatFileSize(product.fileSize)}</span>
             </div>
 
             <p className="text-gray-600 mb-8 leading-relaxed">{product.shortDescription}</p>
@@ -304,32 +329,32 @@ export default function ProductDetail() {
         <div className="mb-16">
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="w-full justify-start bg-transparent border-b border-gray-200 rounded-none h-auto p-0 mb-8">
-              <TabsTrigger 
-                value="description" 
+              <TabsTrigger
+                value="description"
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-pink-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
               >
                 Deskripsi
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="features"
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-pink-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
               >
                 Fitur
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="includes"
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-pink-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3"
               >
                 Yang Didapat
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="description" className="mt-0">
               <div className="prose max-w-none text-gray-600 leading-relaxed">
                 {product.description}
               </div>
             </TabsContent>
-            
+
             <TabsContent value="features" className="mt-0">
               <ul className="space-y-3">
                 {product.features?.map((feature, index) => (
@@ -342,7 +367,7 @@ export default function ProductDetail() {
                 ))}
               </ul>
             </TabsContent>
-            
+
             <TabsContent value="includes" className="mt-0">
               <ul className="space-y-3">
                 {product.includes?.map((item, index) => (
@@ -371,7 +396,7 @@ export default function ProductDetail() {
                       <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
                         {relatedProduct.image ? (
                           <img
-                            src={relatedProduct.image}
+                            src={productHelpers.getFileUrl(relatedProduct, relatedProduct.image)}
                             alt={relatedProduct.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />

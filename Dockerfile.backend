@@ -1,0 +1,18 @@
+FROM node:20-slim
+
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install ONLY the necessary dependencies for the backend
+# Since we use 'tsx' to run the server, we need it and its dependencies
+RUN npm install
+
+# Copy the rest of the application (though we only need the server folder)
+COPY . .
+
+EXPOSE 2091
+
+# Start the server using the script defined in package.json
+CMD ["npm", "run", "server"]

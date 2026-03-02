@@ -13,11 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  Sparkles, 
-  Calendar, 
-  FileSpreadsheet, 
-  LayoutTemplate, 
+import {
+  Sparkles,
+  Calendar,
+  FileSpreadsheet,
+  LayoutTemplate,
   Package,
   Star,
   Search,
@@ -84,7 +84,7 @@ export default function Products() {
     // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query)
       );
@@ -179,11 +179,10 @@ export default function Products() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                    selectedCategory === cat.id
-                      ? 'bg-pink-400 text-white'
-                      : 'bg-white text-gray-600 hover:bg-pink-50 border border-gray-200'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === cat.id
+                    ? 'bg-pink-400 text-white'
+                    : 'bg-white text-gray-600 hover:bg-pink-50 border border-gray-200'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   {cat.name}
@@ -230,13 +229,16 @@ export default function Products() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => {
               const CategoryIcon = getCategoryIcon(product.category);
+              if (!product.slug) {
+                console.warn(`Product "${product.name}" (ID: ${product.id}) is missing a slug!`);
+              }
               return (
-                <Link key={product.id} to={`/product/${product.slug}`}>
+                <Link key={product.id} to={`/product/${product.slug || 'no-slug'}`}>
                   <Card className="overflow-hidden hover-lift border-0 shadow-lg shadow-pink-100/50 group h-full">
                     <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
                       {product.image ? (
                         <img
-                          src={product.image}
+                          src={productHelpers.getFileUrl(product, product.image)}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
@@ -289,8 +291,8 @@ export default function Products() {
             </div>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Produk tidak ditemukan</h3>
             <p className="text-gray-500 mb-4">Coba ubah filter atau kata kunci pencarian</p>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('all');

@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+.next
+.vscode
+.env
+src
+public
+*.md
+Dockerfile*
+docker-compose.yml

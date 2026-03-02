@@ -35,7 +35,10 @@ import {
   LogOut,
   LayoutDashboard,
   ShoppingCart,
-  Sparkles
+  Sparkles,
+  X,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const categories = [
@@ -61,7 +64,25 @@ export default function AdminProducts() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    slug: string;
+    shortDescription: string;
+    description: string;
+    price: string;
+    originalPrice: string;
+    category: string;
+    features: string;
+    includes: string;
+    format: string;
+    fileSize: number;
+    isFeatured: boolean;
+    isNew: boolean;
+    status: string;
+    image: File | null;
+    gallery: File[];
+    productFiles: File[];
+  }>({
     name: '',
     slug: '',
     shortDescription: '',
@@ -72,10 +93,26 @@ export default function AdminProducts() {
     features: '',
     includes: '',
     format: '',
+    fileSize: 0,
     isFeatured: false,
     isNew: false,
     status: 'active',
+    image: null,
+    gallery: [],
+    productFiles: [],
   });
+
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  const [newProductFileNames, setNewProductFileNames] = useState<string[]>([]);
+  const [existingProductFileNames, setExistingProductFileNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Calculate total file size when productFiles change
+    const totalSize = formData.productFiles.reduce((acc, file) => acc + file.size, 0);
+    setFormData(prev => ({ ...prev, fileSize: totalSize }));
+    setNewProductFileNames(formData.productFiles.map(f => f.name));
+  }, [formData.productFiles]);
 
   useEffect(() => {
     loadProducts();
@@ -96,48 +133,108 @@ export default function AdminProducts() {
   };
 
   const handleAdd = async () => {
-    const data = {
-      ...formData,
-      price: parseInt(formData.price),
-      originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : null,
-      features: formData.features.split('\n').filter(f => f.trim()),
-      includes: formData.includes.split('\n').filter(i => i.trim()),
-      rating: 0,
-      reviewCount: 0,
-      salesCount: 0,
-    };
+    try {
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('slug', formData.slug);
+      data.append('shortDescription', formData.shortDescription);
+      data.append('description', formData.description);
+      data.append('price', formData.price || '0');
+      if (formData.originalPrice) data.append('originalPrice', formData.originalPrice);
+      data.append('category', formData.category);
+      data.append('format', formData.format);
+      data.append('fileSize', String(formData.fileSize || 0));
+      data.append('isFeatured', String(formData.isFeatured));
+      data.append('isNew', String(formData.isNew));
+      data.append('status', formData.status);
+      data.append('rating', '0');
+      data.append('reviewCount', '0');
+      data.append('salesCount', '0');
 
-    const result = await productHelpers.create(data);
-    if (result.success) {
-      toast.success('Produk berhasil ditambahkan');
-      setShowAddDialog(false);
-      resetForm();
-      loadProducts();
-    } else {
-      toast.error(result.error || 'Gagal menambahkan produk');
+      // Handle array-like fields for text schema
+      const features = formData.features.split('\n').filter(f => f.trim()).join('\n');
+      data.append('features', features);
+
+      const includes = formData.includes.split('\n').filter(i => i.trim()).join('\n');
+      data.append('includes', includes);
+
+      // Handle files
+      if (formData.image) {
+        data.append('image', formData.image);
+      }
+      formData.gallery.forEach(file => {
+        data.append('gallery', file);
+      });
+      formData.productFiles.forEach(file => {
+        data.append('file', file);
+      });
+
+      const result = await productHelpers.create(data);
+      if (result.success) {
+        toast.success('Produk berhasil ditambahkan');
+        setShowAddDialog(false);
+        resetForm();
+        loadProducts();
+      } else {
+        console.error('PocketBase Create Error:', result.originalError || result.error);
+        toast.error(result.error || 'Gagal menambahkan produk');
+      }
+    } catch (error: any) {
+      console.error('Add Product Exception:', error);
+      toast.error(error.message || 'Terjadi kesalahan');
     }
   };
 
   const handleEdit = async () => {
     if (!selectedProduct) return;
 
-    const data = {
-      ...formData,
-      price: parseInt(formData.price),
-      originalPrice: formData.originalPrice ? parseInt(formData.originalPrice) : null,
-      features: formData.features.split('\n').filter(f => f.trim()),
-      includes: formData.includes.split('\n').filter(i => i.trim()),
-    };
+    try {
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('slug', formData.slug);
+      data.append('shortDescription', formData.shortDescription);
+      data.append('description', formData.description);
+      data.append('price', formData.price || '0');
+      data.append('originalPrice', formData.originalPrice || '');
+      data.append('category', formData.category);
+      data.append('format', formData.format);
+      data.append('fileSize', String(formData.fileSize || 0));
+      data.append('isFeatured', String(formData.isFeatured));
+      data.append('isNew', String(formData.isNew));
+      data.append('status', formData.status);
 
-    const result = await productHelpers.update(selectedProduct.id, data);
-    if (result.success) {
-      toast.success('Produk berhasil diperbarui');
-      setShowEditDialog(false);
-      setSelectedProduct(null);
-      resetForm();
-      loadProducts();
-    } else {
-      toast.error(result.error || 'Gagal memperbarui produk');
+      // Handle array-like fields for text schema
+      const features = formData.features.split('\n').filter(f => f.trim()).join('\n');
+      data.append('features', features);
+
+      const includes = formData.includes.split('\n').filter(i => i.trim()).join('\n');
+      data.append('includes', includes);
+
+      // Handle files
+      if (formData.image) {
+        data.append('image', formData.image);
+      }
+      formData.gallery.forEach(file => {
+        data.append('gallery', file);
+      });
+      formData.productFiles.forEach(file => {
+        data.append('file', file);
+      });
+
+      const result = await productHelpers.update(selectedProduct.id, data);
+      if (result.success) {
+        toast.success('Produk berhasil diperbarui');
+        setShowEditDialog(false);
+        setSelectedProduct(null);
+        resetForm();
+        loadProducts();
+      } else {
+        console.error('PocketBase Update Error:', result.originalError || result.error);
+        toast.error(result.error || 'Gagal memperbarui produk');
+      }
+    } catch (error: any) {
+      console.error('Edit Product Exception:', error);
+      toast.error(error.message || 'Terjadi kesalahan');
     }
   };
 
@@ -165,13 +262,32 @@ export default function AdminProducts() {
       price: product.price.toString(),
       originalPrice: product.originalPrice?.toString() || '',
       category: product.category,
-      features: product.features?.join('\n') || '',
-      includes: product.includes?.join('\n') || '',
+      features: Array.isArray(product.features) ? product.features.join('\n') : (product.features || ''),
+      includes: Array.isArray(product.includes) ? product.includes.join('\n') : (product.includes || ''),
       format: product.format || '',
+      fileSize: product.fileSize || 0,
       isFeatured: product.isFeatured,
       isNew: product.isNew,
       status: product.status,
+      image: null,
+      gallery: [],
+      productFiles: [],
     });
+    if (product.image) {
+      setImagePreview(productHelpers.getFileUrl(product, product.image));
+    } else {
+      setImagePreview(null);
+    }
+    if (product.gallery && product.gallery.length > 0) {
+      setGalleryPreviews(product.gallery.map(img => productHelpers.getFileUrl(product, img)));
+    } else {
+      setGalleryPreviews([]);
+    }
+    if (product.file && product.file.length > 0) {
+      setExistingProductFileNames(product.file);
+    } else {
+      setExistingProductFileNames([]);
+    }
     setShowEditDialog(true);
   };
 
@@ -192,10 +308,69 @@ export default function AdminProducts() {
       features: '',
       includes: '',
       format: '',
+      fileSize: 0,
       isFeatured: false,
       isNew: false,
       status: 'active',
+      image: null,
+      gallery: [],
+      productFiles: [],
     });
+    setImagePreview(null);
+    setGalleryPreviews([]);
+    setNewProductFileNames([]);
+    setExistingProductFileNames([]);
+  };
+
+  const handleProductFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        productFiles: [...prev.productFiles, ...files]
+      }));
+    }
+  };
+
+  const removeProductFile = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      productFiles: prev.productFiles.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setFormData({ ...formData, gallery: [...formData.gallery, ...files] });
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setGalleryPreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setFormData({
+      ...formData,
+      gallery: formData.gallery.filter((_, i) => i !== index)
+    });
+    setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const formatPrice = (price: number) => {
@@ -204,6 +379,24 @@ export default function AdminProducts() {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')     // Replace spaces with -
+      .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+      .replace(/\-\-+/g, '-');  // Replace multiple - with single -
   };
 
   const getCategoryColor = (category: string) => {
@@ -245,8 +438,8 @@ export default function AdminProducts() {
                 key={item.name}
                 to={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
-                    ? 'bg-pink-50 text-pink-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-pink-50 text-pink-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -362,12 +555,20 @@ export default function AdminProducts() {
                         <tr key={product.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-                                <Package className="w-5 h-5 text-pink-400" />
+                              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
+                                {product.image ? (
+                                  <img
+                                    src={productHelpers.getFileUrl(product, product.image)}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Package className="w-5 h-5 text-gray-400" />
+                                )}
                               </div>
-                              <div>
-                                <p className="font-medium text-gray-800">{product.name}</p>
-                                <p className="text-xs text-gray-500">{product.slug}</p>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-800 truncate">{product.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{product.slug}</p>
                               </div>
                             </div>
                           </td>
@@ -379,11 +580,7 @@ export default function AdminProducts() {
                           <td className="py-4 px-6">
                             <div>
                               <p className="font-medium text-gray-800">{formatPrice(product.price)}</p>
-                              {product.originalPrice && (
-                                <p className="text-xs text-gray-400 line-through">
-                                  {formatPrice(product.originalPrice)}
-                                </p>
-                              )}
+                              <p className="text-[10px] text-gray-400 capitalize">{product.format} • {formatFileSize(product.fileSize || 0)}</p>
                             </div>
                           </td>
                           <td className="py-4 px-6">
@@ -449,7 +646,17 @@ export default function AdminProducts() {
                 <Label>Nama Produk</Label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    const prevSlug = slugify(formData.name);
+                    const isSlugAuto = !formData.slug || formData.slug === prevSlug;
+
+                    setFormData(prev => ({
+                      ...prev,
+                      name: newName,
+                      slug: isSlugAuto ? slugify(newName) : prev.slug
+                    }));
+                  }}
                   placeholder="Nama produk"
                 />
               </div>
@@ -457,7 +664,7 @@ export default function AdminProducts() {
                 <Label>Slug</Label>
                 <Input
                   value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, slug: slugify(e.target.value) })}
                   placeholder="nama-produk"
                 />
               </div>
@@ -519,6 +726,23 @@ export default function AdminProducts() {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Aktif</SelectItem>
+                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label>Format File</Label>
                 <Input
                   value={formData.format}
@@ -526,7 +750,155 @@ export default function AdminProducts() {
                   placeholder="PDF, XLSX, dll"
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Ukuran File</Label>
+                <Input
+                  value={formatFileSize(formData.fileSize)}
+                  readOnly
+                  disabled
+                  className="bg-gray-50 cursor-not-allowed"
+                />
+              </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>File Produk Digital (Multiple)</Label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">
+                        <span className="font-semibold">Klik untuk upload</span> atau drag and drop
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Upload file produk yang akan didownload pembeli
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      onChange={handleProductFilesChange}
+                    />
+                  </label>
+                </div>
+
+                {(newProductFileNames.length > 0) && (
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-1">File Terpilih:</p>
+                    {newProductFileNames.map((name, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <Package className="w-4 h-4 text-pink-400 shrink-0" />
+                          <span className="text-sm text-gray-700 truncate">{name}</span>
+                        </div>
+                        <button
+                          onClick={() => removeProductFile(index)}
+                          className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 py-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isFeatured"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                  className="rounded border-gray-300 text-pink-400 focus:ring-pink-400"
+                />
+                <Label htmlFor="isFeatured" className="cursor-pointer font-normal">Produk Unggulan</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isNew"
+                  checked={formData.isNew}
+                  onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })}
+                  className="rounded border-gray-300 text-pink-400 focus:ring-pink-400"
+                />
+                <Label htmlFor="isNew" className="cursor-pointer font-normal">Produk Baru</Label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Gambar Utama</Label>
+              <div className="flex items-start gap-4">
+                <div className="relative group w-32 h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50">
+                  {imagePreview ? (
+                    <>
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => {
+                          setFormData({ ...formData, image: null });
+                          setImagePreview(null);
+                        }}
+                        className="absolute top-1 right-1 bg-white/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3 text-red-500" />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <ImageIcon className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                      <p className="text-[10px] text-gray-400">Pilih Foto</p>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </div>
+                <div className="flex-1 text-xs text-gray-500 pt-2">
+                  <p className="font-medium mb-1">Rekomendasi:</p>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>Rasio 1:1 atau 4:3</li>
+                    <li>Maksimal 2MB</li>
+                    <li>Format JPG, PNG, atau WebP</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Galeri Foto</Label>
+              <div className="grid grid-cols-4 gap-3">
+                {galleryPreviews.map((url, index) => (
+                  <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+                    <img src={url} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removeGalleryImage(index)}
+                      className="absolute top-1 right-1 bg-white/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3 text-red-500" />
+                    </button>
+                  </div>
+                ))}
+                <div className="relative aspect-square rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="text-center">
+                    <Plus className="w-5 h-5 text-gray-300 mx-auto" />
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Fitur (satu per baris)</Label>
               <Textarea
@@ -615,6 +987,219 @@ export default function AdminProducts() {
                   onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Kategori</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Aktif</SelectItem>
+                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Format File</Label>
+                <Input
+                  value={formData.format}
+                  onChange={(e) => setFormData({ ...formData, format: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Ukuran File</Label>
+                <Input
+                  value={formatFileSize(formData.fileSize)}
+                  readOnly
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>File Produk Digital (Multiple)</Label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">Tambah File Baru</p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      onChange={handleProductFilesChange}
+                    />
+                  </label>
+                </div>
+
+                {(existingProductFileNames.length > 0 || newProductFileNames.length > 0) && (
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-1">File:</p>
+                    {/* Existing Files */}
+                    {existingProductFileNames.map((name, index) => (
+                      <div key={`existing-${index}`} className="flex items-center justify-between bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100 opacity-70">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <Package className="w-4 h-4 text-gray-400 shrink-0" />
+                          <span className="text-sm text-gray-700 truncate">{name}</span>
+                          <Badge variant="secondary" className="text-[9px] px-1 h-4">Existing</Badge>
+                        </div>
+                        <button
+                          onClick={() => setExistingProductFileNames(prev => prev.filter((_, i) => i !== index))}
+                          className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {/* New Files */}
+                    {newProductFileNames.map((name, index) => (
+                      <div key={`new-${index}`} className="flex items-center justify-between bg-white px-3 py-2 rounded-md shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <Package className="w-4 h-4 text-pink-400 shrink-0" />
+                          <span className="text-sm text-gray-700 truncate">{name}</span>
+                          <Badge className="bg-pink-100 text-pink-600 border-none text-[9px] px-1 h-4">New</Badge>
+                        </div>
+                        <button
+                          onClick={() => removeProductFile(index)}
+                          className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 py-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="editIsFeatured"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                  className="rounded border-gray-300 text-pink-400 focus:ring-pink-400"
+                />
+                <Label htmlFor="editIsFeatured" className="cursor-pointer font-normal">Produk Unggulan</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="editIsNew"
+                  checked={formData.isNew}
+                  onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })}
+                  className="rounded border-gray-300 text-pink-400 focus:ring-pink-400"
+                />
+                <Label htmlFor="editIsNew" className="cursor-pointer font-normal">Produk Baru</Label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Gambar Utama</Label>
+              <div className="flex items-start gap-4">
+                <div className="relative group w-32 h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50">
+                  {imagePreview ? (
+                    <>
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => {
+                          setFormData({ ...formData, image: null });
+                          setImagePreview(null);
+                        }}
+                        className="absolute top-1 right-1 bg-white/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3 text-red-500" />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <ImageIcon className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                      <p className="text-[10px] text-gray-400">Pilih Foto</p>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Galeri Foto</Label>
+              <div className="grid grid-cols-4 gap-3">
+                {galleryPreviews.map((url, index) => (
+                  <div key={index} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+                    <img src={url} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removeGalleryImage(index)}
+                      className="absolute top-1 right-1 bg-white/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3 text-red-500" />
+                    </button>
+                  </div>
+                ))}
+                <div className="relative aspect-square rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="text-center">
+                    <Plus className="w-5 h-5 text-gray-300 mx-auto" />
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fitur (satu per baris)</Label>
+              <Textarea
+                value={formData.features}
+                onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Yang Didapat (satu per baris)</Label>
+              <Textarea
+                value={formData.includes}
+                onChange={(e) => setFormData({ ...formData, includes: e.target.value })}
+                rows={3}
+              />
             </div>
           </div>
           <DialogFooter>

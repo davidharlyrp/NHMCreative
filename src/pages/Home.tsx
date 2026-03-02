@@ -89,6 +89,14 @@ export default function Home() {
     }).format(price);
   };
 
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'planner': return Calendar;
@@ -220,7 +228,7 @@ export default function Home() {
                       <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
                         {product.image ? (
                           <img
-                            src={product.image}
+                            src={productHelpers.getFileUrl(product, product.image)}
                             alt={product.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
@@ -248,8 +256,8 @@ export default function Home() {
                         <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{product.name}</h3>
                         <div className="flex items-center gap-1 mb-2">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm text-gray-600">{product.rating}</span>
                           <span className="text-sm text-gray-400">({product.reviewCount})</span>
+                          <span className="text-[10px] text-gray-300 ml-auto">{product.format} • {formatFileSize(product.fileSize)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-pink-600">{formatPrice(product.price)}</span>
