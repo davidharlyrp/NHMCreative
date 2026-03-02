@@ -93,13 +93,13 @@ export default function Register() {
               ))}
             </div>
 
-            <div className="mt-8 p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl">
+            {/* <div className="mt-8 p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl">
               <p className="text-gray-600 italic">
                 "Produk dari NHMCreative sangat membantu saya mengelola tugas harian
                 sebagai virtual assistant. Sangat recommended!"
               </p>
               <p className="text-sm text-gray-500 mt-3">— Sarah, Virtual Assistant</p>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Side - Form */}

@@ -246,3 +246,68 @@ export const fileHelpers = {
     return pb.files.getUrl(record, filename);
   }
 };
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:2091';
+
+// Review helpers
+export const reviewHelpers = {
+  async getByProduct(productId: string) {
+    try {
+      const records = await pb.collection('review').getFullList({
+        filter: `productId = "${productId}"`,
+        sort: '-created',
+        expand: 'userId'
+      });
+      return { success: true, data: records };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async create(reviewData: any) {
+    try {
+      const response = await fetch(`${API_URL}/api/review/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to create review');
+
+      return { success: true, data: result.data };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getByUserAndProduct(userId: string, productId: string) {
+    try {
+      const record = await pb.collection('review').getFirstListItem(
+        `userId = "${userId}" && productId = "${productId}"`
+      );
+      return { success: true, data: record };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getAll(options: { page?: number, perPage?: number, filter?: string } = {}) {
+    try {
+      const result = await pb.collection('review').getList(
+        options.page || 1,
+        options.perPage || 30,
+        {
+          filter: options.filter || '',
+          sort: '-created',
+          expand: 'userId,productId'
+        }
+      );
+      return { success: true, ...result };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+};

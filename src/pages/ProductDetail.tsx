@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { productHelpers, orderHelpers } from '@/lib/pocketbase';
+import { productHelpers, orderHelpers, reviewHelpers } from '@/lib/pocketbase';
 import type { Product } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -47,13 +47,36 @@ export default function ProductDetail() {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  // Review form state
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [reviewUserName, setReviewUserName] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (slug) {
       loadProduct();
     }
   }, [slug, user]);
+
+  const checkReviewStatus = async (productId: string) => {
+    if (!user?.id) return;
+    const result = await reviewHelpers.getByUserAndProduct(user.id, productId);
+    if (result.success && result.data) {
+      setHasReviewed(true);
+    }
+  };
+
+  const loadReviews = async (productId: string) => {
+    const result = await reviewHelpers.getByProduct(productId);
+    if (result.success && result.data) {
+      setReviews(result.data);
+    }
+  };
 
   const checkPurchaseStatus = async (productId: string) => {
     try {
@@ -68,8 +91,8 @@ export default function ProductDetail() {
     }
   };
 
-  const loadProduct = async () => {
-    setIsLoading(true);
+  const loadProduct = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     console.log('Fetching product with slug:', slug);
     const result = await productHelpers.getBySlug(slug!);
     if (result.success && result.data) {
@@ -80,7 +103,11 @@ export default function ProductDetail() {
       // Check if user has purchased
       if (user?.id) {
         checkPurchaseStatus(prod.id);
+        checkReviewStatus(prod.id);
+        setReviewUserName(user.name || '');
       }
+
+      loadReviews(prod.id);
 
       // Load related products
       const related = await productHelpers.getAll({
@@ -96,7 +123,7 @@ export default function ProductDetail() {
       toast.error('Produk tidak ditemukan');
       navigate('/products');
     }
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   };
 
   const handleBuy = async () => {
@@ -201,6 +228,36 @@ export default function ProductDetail() {
     return names[category] || category;
   };
 
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.id || !product) return;
+
+    setIsSubmittingReview(true);
+    try {
+      const result = await reviewHelpers.create({
+        productId: product.id,
+        userId: user.id,
+        userName: reviewUserName || user.name,
+        rating: rating,
+        comment: comment
+      });
+
+      if (result.success) {
+        toast.success('Terima kasih atas ulasan Anda!');
+        setHasReviewed(true);
+        setComment('');
+        loadProduct(true); // Re-fetch product data for updated rating/count
+        loadReviews(product.id);
+      } else {
+        toast.error(result.error || 'Gagal mengirim ulasan');
+      }
+    } catch (error) {
+      toast.error('Gagal mengirim ulasan');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -286,7 +343,7 @@ export default function ProductDetail() {
             )}
             {product.originalPrice && (
               <Badge className="absolute top-4 right-4 bg-red-400 text-white border-0 text-sm px-3 py-1">
-                Diskon
+                % Diskon
               </Badge>
             )}
           </div>
@@ -301,10 +358,12 @@ export default function ProductDetail() {
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">{product.name}</h1>
 
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-semibold text-gray-800">{product.rating}</span>
-                <span className="text-gray-500">({product.reviewCount} ulasan)</span>
+              <div className="flex items-center gap-1.5">
+                <div className="flex text-yellow-400">
+                  <Star className="w-4 h-4 fill-current" />
+                </div>
+                <span className="font-bold text-gray-800">{product.rating.toFixed(1)}</span>
+                <span className="text-gray-400 text-sm">({product.reviewCount} ulasan)</span>
               </div>
               <div className="w-px h-4 bg-gray-300"></div>
               <div className="text-gray-500">
@@ -379,9 +438,6 @@ export default function ProductDetail() {
                   )}
                 </Button>
               )}
-              <Button size="lg" variant="outline" className="border-pink-200 text-pink-500 hover:bg-pink-50 rounded-xl px-8">
-                Preview
-              </Button>
             </div>
           </div>
         </div>
@@ -482,6 +538,147 @@ export default function ProductDetail() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Reviews Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+        <div className="border-t border-gray-100 pt-12">
+          <div className="flex flex-col md:flex-row md:items-start gap-12">
+            {/* Left Side: Summary & Form */}
+            <div className="md:w-1/3">
+              <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                Ulasan Pelanggan
+                <Badge variant="secondary" className="bg-pink-50 text-pink-500 border-none px-2 rounded-full text-xs">
+                  {reviews.length}
+                </Badge>
+              </h2>
+
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl font-bold text-gray-800">{product.rating.toFixed(1)}</div>
+                  <div className="flex flex-col">
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-gray-400 uppercase tracking-tight">Berdasarkan {product.reviewCount} ulasan</span>
+                  </div>
+                </div>
+
+                {/* Verified Buyer Form */}
+                {hasPurchased && !hasReviewed && (
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-4">Tulis Ulasan</h3>
+                    <form onSubmit={handleReviewSubmit} className="space-y-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 ml-1">Username Review</label>
+                        <input
+                          type="text"
+                          required
+                          value={reviewUserName}
+                          onChange={(e) => setReviewUserName(e.target.value)}
+                          placeholder="Nama yang akan ditampilkan..."
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 transition-all placeholder:text-gray-300 mb-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 ml-1">Rating Produk</label>
+                        <div className="flex gap-1.5 text-gray-200 ml-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setRating(star)}
+                              className={`transition-all ${star <= rating ? 'text-yellow-400' : 'hover:text-yellow-300'}`}
+                            >
+                              <Star className={`w-6 h-6 ${star <= rating ? 'fill-current' : ''}`} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <textarea
+                          required
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 transition-all placeholder:text-gray-300"
+                          rows={3}
+                          placeholder="Tulis ulasan Anda di sini..."
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={isSubmittingReview}
+                        className="w-full bg-pink-400 hover:bg-pink-500 text-white rounded-xl py-5"
+                      >
+                        {isSubmittingReview ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : 'Kirim Ulasan'}
+                      </Button>
+                    </form>
+                  </div>
+                )}
+
+                {hasReviewed && (
+                  <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-100">
+                    <p className="text-xs text-green-700 text-center font-medium">Anda sudah memberikan ulasan. Terima kasih!</p>
+                  </div>
+                )}
+
+                {!user && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <p className="text-xs text-gray-500 text-center leading-relaxed">
+                      Silakan <button onClick={() => setShowLoginDialog(true)} className="text-pink-500 font-semibold underline">Login</button> untuk menulis ulasan produk ini.
+                    </p>
+                  </div>
+                )}
+
+                {user && !hasPurchased && !hasReviewed && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <p className="text-xs text-gray-500 text-center italic leading-relaxed">Hanya pembeli yang bisa memberikan ulasan.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Side: Reviews List */}
+            <div className="md:w-2/3">
+              <div className="space-y-4">
+                {reviews.length > 0 ? (
+                  reviews.map((rev) => (
+                    <div key={rev.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm transition-all hover:bg-gray-50/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-500 text-xs font-bold uppercase">
+                            {rev.userName?.charAt(0) || rev.expand?.userId?.name?.charAt(0) || '?'}
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-gray-800">{rev.userName || rev.expand?.userId?.name || 'Anonim'}</div>
+                            <div className="text-[10px] text-gray-400">
+                              {new Date(rev.created).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex text-yellow-400">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'fill-current' : ''}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 leading-relaxed italic line-clamp-3">"{rev.comment}"</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-16 text-center border border-dashed border-gray-200 rounded-2xl bg-gray-50/30">
+                    <Star className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">Belum ada ulasan.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Login Dialog */}

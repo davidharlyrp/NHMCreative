@@ -184,6 +184,82 @@ app.get('/api/payment/test-update/:orderId', async (req, res) => {
     }
 });
 
+// Create Product Review and update product rating/reviewCount
+app.post('/api/review/create', async (req, res) => {
+    try {
+        const { productId, userId, userName, rating, comment } = req.body;
+
+        if (!productId || !userId || !rating) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        const adminPb = await getAdminPB();
+
+        // 1. Create the review
+        const review = await adminPb.collection('review').create({
+            productId,
+            userId,
+            userName,
+            rating,
+            comment
+        });
+
+        // 2. Fetch all reviews for this product to recalculate
+        const allReviews = await adminPb.collection('review').getFullList({
+            filter: `productId = "${productId}"`
+        });
+
+        const reviewCount = allReviews.length;
+        const averageRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount;
+
+        // 3. Update the product
+        await adminPb.collection('products').update(productId, {
+            rating: averageRating,
+            reviewCount: reviewCount
+        });
+
+        console.log(`UPDATED: Product ${productId} - Rating: ${averageRating.toFixed(1)}, Count: ${reviewCount}`);
+
+        res.json({ success: true, data: review });
+    } catch (error: any) {
+        console.error('Review Error:', error);
+        res.status(500).json({
+            error: 'Failed to create review and update product',
+            message: error.message
+        });
+    }
+});
+
+// Sync all products with their current reviews (Utility route)
+app.get('/api/reviews/sync-all', async (req, res) => {
+    try {
+        const adminPb = await getAdminPB();
+        const products = await adminPb.collection('products').getFullList();
+        const allReviews = await adminPb.collection('review').getFullList();
+
+        const results = [];
+
+        for (const product of products) {
+            const productReviews = allReviews.filter(r => r.productId === product.id);
+            const reviewCount = productReviews.length;
+            const averageRating = reviewCount > 0
+                ? productReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+                : 0;
+
+            await adminPb.collection('products').update(product.id, {
+                rating: averageRating,
+                reviewCount: reviewCount
+            });
+
+            results.push({ name: product.name, rating: averageRating, count: reviewCount });
+        }
+
+        res.json({ success: true, message: 'All products synced', results });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`NHMCreative Payment Server running on http://localhost:${port}`);
 });

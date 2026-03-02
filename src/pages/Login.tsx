@@ -25,14 +25,14 @@ export default function Login() {
     setIsLoading(true);
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
       toast.success('Berhasil masuk!');
       navigate('/');
     } else {
       toast.error(result.error || 'Gagal masuk. Periksa email dan password Anda.');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -104,7 +104,7 @@ export default function Login() {
                   <Checkbox
                     id="rememberMe"
                     checked={formData.rememberMe}
-                    onCheckedChange={(checked) => 
+                    onCheckedChange={(checked) =>
                       setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
                     }
                   />
@@ -115,12 +115,12 @@ export default function Login() {
                     Ingat saya
                   </label>
                 </div>
-                <Link
+                {/* <Link
                   to="/forgot-password"
                   className="text-sm text-pink-500 hover:text-pink-600 font-medium"
                 >
                   Lupa password?
-                </Link>
+                </Link> */}
               </div>
 
               <Button

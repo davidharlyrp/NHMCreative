@@ -38,7 +38,8 @@ import {
   Sparkles,
   X,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Star
 } from 'lucide-react';
 
 const categories = [
@@ -53,6 +54,7 @@ const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Produk', href: '/admin/products', icon: Package },
   { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Ulasan', href: '/admin/reviews', icon: Star },
 ];
 
 export default function AdminProducts() {
@@ -634,7 +636,7 @@ export default function AdminProducts() {
 
       {/* Add Product Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Tambah Produk Baru</DialogTitle>
             <DialogDescription>
@@ -932,7 +934,7 @@ export default function AdminProducts() {
 
       {/* Edit Product Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-4xl max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Produk</DialogTitle>
             <DialogDescription>

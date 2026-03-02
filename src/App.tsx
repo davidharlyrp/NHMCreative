@@ -16,6 +16,7 @@ import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminOrders from '@/pages/admin/AdminOrders';
+import AdminReviews from '@/pages/admin/AdminReviews';
 
 // Protected Route Component
 function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode; requireAdmin?: boolean }) {
@@ -157,6 +158,17 @@ function AppRoutes() {
           <ProtectedRoute requireAdmin>
             <AdminLayout>
               <AdminOrders />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/reviews"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminLayout>
+              <AdminReviews />
             </AdminLayout>
           </ProtectedRoute>
         }

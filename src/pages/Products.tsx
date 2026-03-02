@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { productHelpers } from '@/lib/pocketbase';
 import type { Product } from '@/types';
@@ -44,7 +44,6 @@ const sortOptions = [
 export default function Products() {
   const { category: categoryParam } = useParams();
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
@@ -60,10 +59,6 @@ export default function Products() {
     }
   }, [categoryParam]);
 
-  useEffect(() => {
-    filterAndSortProducts();
-  }, [products, searchQuery, selectedCategory, sortBy]);
-
   const loadProducts = async () => {
     setIsLoading(true);
     const result = await productHelpers.getAll({ filter: 'status = "active"' });
@@ -73,7 +68,7 @@ export default function Products() {
     setIsLoading(false);
   };
 
-  const filterAndSortProducts = () => {
+  const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
     // Filter by category
@@ -109,8 +104,8 @@ export default function Products() {
         filtered.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
     }
 
-    setFilteredProducts(filtered);
-  };
+    return filtered;
+  }, [products, searchQuery, selectedCategory, sortBy]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -203,7 +198,7 @@ export default function Products() {
               />
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px] border-gray-200">
+              <SelectTrigger className="w-fit border-gray-200">
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -247,14 +242,9 @@ export default function Products() {
                           <CategoryIcon className="w-16 h-16 text-pink-300" />
                         </div>
                       )}
-                      {product.isNew && (
-                        <Badge className="absolute top-3 left-3 bg-green-400 text-white border-0">
-                          Baru
-                        </Badge>
-                      )}
                       {product.originalPrice && (
                         <Badge className="absolute top-3 right-3 bg-red-400 text-white border-0">
-                          Diskon
+                          % Diskon
                         </Badge>
                       )}
                     </div>
@@ -263,12 +253,20 @@ export default function Products() {
                         <CategoryIcon className="w-3 h-3 mr-1" />
                         {product.category}
                       </Badge>
+
+                      {product.isNew && (
+                        <Badge className="bg-green-400 text-white border-0 ml-2">
+                          Baru
+                        </Badge>
+                      )}
                       <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{product.name}</h3>
                       <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.shortDescription}</p>
-                      <div className="flex items-center gap-1 mb-2">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-gray-600">{product.rating}</span>
-                        <span className="text-sm text-gray-400">({product.reviewCount})</span>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <div className="flex text-yellow-400">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                        </div>
+                        <span className="text-sm font-bold text-gray-800">{product.rating.toFixed(1)}</span>
+                        <span className="text-xs text-gray-400">({product.reviewCount})</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-pink-600">{formatPrice(product.price)}</span>

@@ -24,13 +24,15 @@ import {
   Sparkles,
   RefreshCw,
   DollarSign,
-  Calendar
+  Calendar,
+  Star
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Produk', href: '/admin/products', icon: Package },
   { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Ulasan', href: '/admin/reviews', icon: Star },
 ];
 
 const statusOptions = [
@@ -66,15 +68,15 @@ export default function AdminOrders() {
     toast.success('Berhasil keluar');
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-    const result = await orderHelpers.updateStatus(orderId, newStatus);
-    if (result.success) {
-      toast.success('Status pesanan diperbarui');
-      loadOrders();
-    } else {
-      toast.error('Gagal memperbarui status');
-    }
-  };
+  // const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+  //   const result = await orderHelpers.updateStatus(orderId, newStatus);
+  //   if (result.success) {
+  //     toast.success('Status pesanan diperbarui');
+  //     loadOrders();
+  //   } else {
+  //     toast.error('Gagal memperbarui status');
+  //   }
+  // };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -116,7 +118,7 @@ export default function AdminOrders() {
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      order.productName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (order.expand?.productId?.name || order.productName)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.expand?.userId?.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -156,8 +158,8 @@ export default function AdminOrders() {
                 key={item.name}
                 to={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
-                    ? 'bg-pink-50 text-pink-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-pink-50 text-pink-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -242,8 +244,8 @@ export default function AdminOrders() {
                     <p className="text-sm text-gray-500 mb-1">Total Pendapatan</p>
                     <p className="text-2xl font-bold text-gray-800">{formatPrice(totalRevenue)}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                    <DollarSign className="w-6 h-6 text-green-500" />
+                  <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-pink-500" />
                   </div>
                 </div>
               </CardContent>
@@ -256,8 +258,8 @@ export default function AdminOrders() {
                     <p className="text-sm text-gray-500 mb-1">Menunggu Pembayaran</p>
                     <p className="text-2xl font-bold text-gray-800">{pendingCount}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-yellow-500" />
+                  <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-pink-500" />
                   </div>
                 </div>
               </CardContent>
@@ -323,7 +325,7 @@ export default function AdminOrders() {
                         <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Jumlah</th>
                         <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Status</th>
                         <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Tanggal</th>
-                        <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Aksi</th>
+                        {/* <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Aksi</th> */}
                       </tr>
                     </thead>
                     <tbody>
@@ -335,11 +337,11 @@ export default function AdminOrders() {
                             </span>
                           </td>
                           <td className="py-4 px-6">
-                            <p className="font-medium text-gray-800">{order.productName}</p>
+                            <p className="font-medium text-gray-800">{order.expand?.productId?.name || order.productName}</p>
                           </td>
                           <td className="py-4 px-6">
                             <div>
-                              <p className="text-sm text-gray-800">{order.expand?.userId?.name || 'Unknown'}</p>
+                              <p className="text-sm text-gray-800 font-semibold">{order.expand?.userId?.name || 'Unknown'}</p>
                               <p className="text-xs text-gray-500">{order.expand?.userId?.email}</p>
                             </div>
                           </td>
@@ -354,7 +356,7 @@ export default function AdminOrders() {
                           <td className="py-4 px-6">
                             <p className="text-sm text-gray-500">{formatDate(order.created)}</p>
                           </td>
-                          <td className="py-4 px-6">
+                          {/* <td className="py-4 px-6">
                             <Select
                               value={order.status}
                               onValueChange={(value) => handleUpdateStatus(order.id, value)}
@@ -369,7 +371,7 @@ export default function AdminOrders() {
                                 <SelectItem value="refunded">Dikembalikan</SelectItem>
                               </SelectContent>
                             </Select>
-                          </td>
+                          </td> */}
                         </tr>
                       ))}
                     </tbody>

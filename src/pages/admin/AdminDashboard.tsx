@@ -13,7 +13,8 @@ import {
   DollarSign,
   ArrowRight,
   LogOut,
-  Sparkles
+  Sparkles,
+  Star
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,10 +27,11 @@ interface DashboardStats {
   salesByMonth: { month: string; amount: number }[];
 }
 
-const navItems = [
+export const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Produk', href: '/admin/products', icon: Package },
   { name: 'Pesanan', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Ulasan', href: '/admin/reviews', icon: Star },
 ];
 
 export default function AdminDashboard() {
@@ -67,11 +69,19 @@ export default function AdminDashboard() {
     }).format(price);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatNumber = (number: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+    }).format(number);
+  };
+
+  const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -108,8 +118,8 @@ export default function AdminDashboard() {
                 key={item.name}
                 to={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
-                    ? 'bg-pink-50 text-pink-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-pink-50 text-pink-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -199,8 +209,8 @@ export default function AdminDashboard() {
                         <p className="text-sm text-gray-500 mb-1">Total Pendapatan</p>
                         <p className="text-2xl font-bold text-gray-800">{formatPrice(stats.totalRevenue)}</p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                        <DollarSign className="w-6 h-6 text-green-500" />
+                      <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+                        <DollarSign className="w-6 h-6 text-pink-500" />
                       </div>
                     </div>
                   </CardContent>
@@ -213,8 +223,8 @@ export default function AdminDashboard() {
                         <p className="text-sm text-gray-500 mb-1">Total Pesanan</p>
                         <p className="text-2xl font-bold text-gray-800">{stats.totalOrders}</p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-                        <TrendingUp className="w-6 h-6 text-purple-500" />
+                      <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-pink-500" />
                       </div>
                     </div>
                   </CardContent>
@@ -227,8 +237,8 @@ export default function AdminDashboard() {
                         <p className="text-sm text-gray-500 mb-1">Total Produk</p>
                         <p className="text-2xl font-bold text-gray-800">{stats.totalProducts}</p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
-                        <Package className="w-6 h-6 text-orange-500" />
+                      <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+                        <Package className="w-6 h-6 text-pink-500" />
                       </div>
                     </div>
                   </CardContent>
@@ -254,23 +264,28 @@ export default function AdminDashboard() {
                           <tr className="border-b border-gray-100">
                             <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">ID</th>
                             <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Produk</th>
-                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Jumlah</th>
-                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Status</th>
-                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Tanggal</th>
+                            <th className="text-center py-3 px-4 text-sm font-medium text-gray-500">Jumlah</th>
+                            <th className="text-center py-3 px-4 text-sm font-medium text-gray-500">Status</th>
+                            <th className="text-center py-3 px-4 text-sm font-medium text-gray-500">Tanggal</th>
                           </tr>
                         </thead>
                         <tbody>
                           {stats.recentOrders.map((order: any) => (
                             <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50">
                               <td className="py-3 px-4 text-sm text-gray-600">#{order.id.slice(-6)}</td>
-                              <td className="py-3 px-4 text-sm text-gray-800">{order.productName}</td>
-                              <td className="py-3 px-4 text-sm text-gray-600">{formatPrice(order.amount)}</td>
-                              <td className="py-3 px-4">
+                              <td className="py-3 px-4 text-sm text-gray-800 font-semibold">{order.expand?.productId?.name || order.productName}</td>
+                              <td className="py-3 px-4 text-sm text-gray-600">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-sm text-gray-600">Rp</span>
+                                  <span className="text-sm text-right text-gray-600">{formatNumber(order.amount)}</span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 flex items-center justify-center">
                                 <Badge variant="outline" className={getStatusBadge(order.status)}>
                                   {order.status}
                                 </Badge>
                               </td>
-                              <td className="py-3 px-4 text-sm text-gray-500">{formatDate(order.created)}</td>
+                              <td className="py-3 px-4 text-sm text-gray-500 text-center">{formatDateTime(order.created)}</td>
                             </tr>
                           ))}
                         </tbody>
