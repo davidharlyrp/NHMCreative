@@ -407,7 +407,7 @@ export default function ProductDetail() {
               {hasPurchased ? (
                 <Button
                   size="lg"
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white shadow-sm rounded-xl"
+                  className="flex-1 bg-pink-500 py-4 hover:bg-pink-600 text-white shadow-sm rounded-xl"
                   onClick={() => {
                     if (product.file && product.file.length > 0) {
                       window.open(productHelpers.getFileUrl(product, product.file[0]), '_blank');
@@ -422,7 +422,7 @@ export default function ProductDetail() {
               ) : (
                 <Button
                   size="lg"
-                  className="flex-1 bg-pink-400 hover:bg-pink-500 text-white shadow-sm rounded-xl"
+                  className="flex-1 bg-pink-400 py-4 hover:bg-pink-500 text-white shadow-sm rounded-xl"
                   onClick={handleBuy}
                   disabled={isPaymentLoading}
                 >
