@@ -148,7 +148,8 @@ app.post('/api/payment/webhook', async (req, res) => {
 });
 
 // Diagnostic route for unexpected URLs
-app.all('/api/payment/(.*)', (req, res) => {
+// Diagnostic route for unexpected URLs
+app.all('/api/payment/:path*', (req, res) => {
     console.log('--- Unexpected Payment Route Hit ---');
     console.log('URL:', req.url);
     console.log('Method:', req.method);
