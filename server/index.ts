@@ -5,6 +5,12 @@ import { Xendit } from 'xendit-node';
 
 dotenv.config();
 
+console.log('--- Server Internal Debug ---');
+console.log('PB URL:', process.env.VITE_POCKETBASE_URL);
+console.log('Admin Email:', process.env.PB_ADMIN_EMAIL ? 'Set' : 'MISSING');
+console.log('Xendit Key:', process.env.XENDIT_SECRET_KEY ? 'Set' : 'MISSING');
+console.log('-----------------------------');
+
 const app = express();
 const port = process.env.PORT || 2091;
 
@@ -60,6 +66,19 @@ app.post('/api/payment/create', async (req, res) => {
         };
 
         const response = await Invoice.createInvoice({ data });
+
+        // Proactively update order in PocketBase with invoice URL and ID
+        try {
+            const adminPb = await getAdminPB();
+            await adminPb.collection('orders').update(orderId, {
+                paymentId: response.id,
+                invoiceUrl: response.invoiceUrl,
+                paymentMethod: 'xendit'
+            });
+            console.log(`Order ${orderId} updated with Invoice info.`);
+        } catch (updateErr: any) {
+            console.error('Failed to update order after invoice creation:', updateErr.message);
+        }
 
         res.json({
             invoice_url: response.invoiceUrl,
