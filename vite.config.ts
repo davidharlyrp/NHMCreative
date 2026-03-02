@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://api.nhmcreative.com',
+        target: 'http://localhost:2091',
         changeOrigin: true,
       },
     },
