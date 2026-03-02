@@ -147,6 +147,23 @@ app.post('/api/payment/webhook', async (req, res) => {
     }
 });
 
+// MANUAL TEST ROUTE: Call this in your browser to test if status update works
+// Example: https://api.nhmcreative.com/api/payment/test-update/your_order_id
+app.get('/api/payment/test-update/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        console.log('--- Running Manual Update Test ---');
+        const adminPb = await getAdminPB();
+        await adminPb.collection('orders').update(orderId, {
+            status: 'paid'
+        });
+        res.send(`Successfully updated order ${orderId} to paid manually!`);
+    } catch (err: any) {
+        console.error('Manual Update Failed:', err.message);
+        res.status(500).send('Failed: ' + err.message);
+    }
+});
+
 app.listen(port, () => {
     console.log(`NHMCreative Payment Server running on http://localhost:${port}`);
 });
