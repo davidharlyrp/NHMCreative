@@ -21,8 +21,14 @@ const { Invoice } = xenditClient;
 // Initialize PocketBase for backend use
 import PocketBase from 'pocketbase';
 const pb = new PocketBase(process.env.VITE_POCKETBASE_URL);
-// Note: We might need to auth as admin if the status update is restricted
-// await pb.admins.authWithPassword(process.env.PB_ADMIN_EMAIL, process.env.PB_ADMIN_PASSWORD);
+
+// Function to get admin-authenticated PocketBase instance
+async function getAdminPB() {
+    if (process.env.PB_ADMIN_EMAIL && process.env.PB_ADMIN_PASSWORD) {
+        await pb.admins.authWithPassword(process.env.PB_ADMIN_EMAIL, process.env.PB_ADMIN_PASSWORD);
+    }
+    return pb;
+}
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -78,13 +84,14 @@ app.post('/api/payment/webhook', async (req, res) => {
         if (status === 'PAID') {
             // Update PocketBase status
             try {
-                await pb.collection('orders').update(external_id, {
+                const adminPb = await getAdminPB();
+                await adminPb.collection('orders').update(external_id, {
                     status: 'paid',
                     xenditInvoiceId: id
                 });
                 console.log(`Order ${external_id} updated to PAID`);
             } catch (pbError: any) {
-                console.error('PocketBase Update Error:', pbError);
+                console.error('PocketBase Update Error:', pbError.data || pbError.message);
             }
         }
 
