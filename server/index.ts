@@ -67,7 +67,7 @@ app.post('/api/payment/create', async (req, res) => {
             },
             currency: 'IDR',
             reminderTime: 1,
-            successRedirectUrl: `${req.headers.origin}/products`,
+            successRedirectUrl: `${req.headers.origin}/product-detail/${orderId}`,
             failureRedirectUrl: `${req.headers.origin}/product-detail/${orderId}`, // Or similar error page
         };
 
@@ -125,10 +125,22 @@ app.post('/api/payment/webhook', async (req, res) => {
                     throw findError;
                 }
 
+                // Get product information from the order
+                const order = await adminPb.collection('orders').getOne(external_id);
+
+                // Update Order status
                 await adminPb.collection('orders').update(external_id, {
                     status: 'paid',
                     paymentId: id
                 });
+
+                // Increment salesCount for the product
+                if (order.productId) {
+                    await adminPb.collection('products').update(order.productId, {
+                        'salesCount+': 1
+                    });
+                    console.log(`INCREMENTED: Product ${order.productId} salesCount by 1`);
+                }
                 console.log(`SUCCESS: Order ${external_id} updated to PAID`);
             } catch (pbError: any) {
                 console.error('PocketBase Update FAILED:');
@@ -154,9 +166,17 @@ app.get('/api/payment/test-update/:orderId', async (req, res) => {
     try {
         console.log('--- Running Manual Update Test ---');
         const adminPb = await getAdminPB();
+        const order = await adminPb.collection('orders').getOne(orderId);
         await adminPb.collection('orders').update(orderId, {
             status: 'paid'
         });
+
+        // Also increment salesCount in manual test
+        if (order.productId) {
+            await adminPb.collection('products').update(order.productId, {
+                'salesCount+': 1
+            });
+        }
         res.send(`Successfully updated order ${orderId} to paid manually!`);
     } catch (err: any) {
         console.error('Manual Update Failed:', err.message);

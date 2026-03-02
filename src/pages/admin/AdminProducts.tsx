@@ -108,9 +108,6 @@ export default function AdminProducts() {
   const [existingProductFileNames, setExistingProductFileNames] = useState<string[]>([]);
 
   useEffect(() => {
-    // Calculate total file size when productFiles change
-    const totalSize = formData.productFiles.reduce((acc, file) => acc + file.size, 0);
-    setFormData(prev => ({ ...prev, fileSize: totalSize }));
     setNewProductFileNames(formData.productFiles.map(f => f.name));
   }, [formData.productFiles]);
 
@@ -325,17 +322,21 @@ export default function AdminProducts() {
   const handleProductFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
+      const additionalSize = files.reduce((acc, file) => acc + file.size, 0);
       setFormData(prev => ({
         ...prev,
-        productFiles: [...prev.productFiles, ...files]
+        productFiles: [...prev.productFiles, ...files],
+        fileSize: prev.fileSize + additionalSize
       }));
     }
   };
 
   const removeProductFile = (index: number) => {
+    const fileToRemove = formData.productFiles[index];
     setFormData(prev => ({
       ...prev,
-      productFiles: prev.productFiles.filter((_, i) => i !== index)
+      productFiles: prev.productFiles.filter((_, i) => i !== index),
+      fileSize: Math.max(0, prev.fileSize - (fileToRemove?.size || 0))
     }));
   };
 

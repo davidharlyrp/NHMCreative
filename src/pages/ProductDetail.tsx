@@ -46,12 +46,27 @@ export default function ProductDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (slug) {
       loadProduct();
     }
-  }, [slug]);
+  }, [slug, user]);
+
+  const checkPurchaseStatus = async (productId: string) => {
+    try {
+      const result = await orderHelpers.getAll({
+        filter: `userId = "${user?.id}" && productId = "${productId}" && status = "paid"`
+      });
+      if (result.success && result.data && result.data.length > 0) {
+        setHasPurchased(true);
+      }
+    } catch (error) {
+      console.error('Error checking purchase status:', error);
+    }
+  };
 
   const loadProduct = async () => {
     setIsLoading(true);
@@ -60,6 +75,13 @@ export default function ProductDetail() {
     if (result.success && result.data) {
       const prod = result.data as unknown as Product;
       setProduct(prod);
+      setActiveImage(prod.image);
+
+      // Check if user has purchased
+      if (user?.id) {
+        checkPurchaseStatus(prod.id);
+      }
+
       // Load related products
       const related = await productHelpers.getAll({
         filter: `category = "${prod.category}" && id != "${prod.id}" && status = "active"`,
@@ -221,19 +243,42 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Product Image */}
           <div className="relative">
-            <div className="aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
-              {product.image ? (
+            <div className="aspect-square rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+              {activeImage ? (
                 <img
-                  src={productHelpers.getFileUrl(product, product.image)}
+                  src={productHelpers.getFileUrl(product, activeImage)}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <CategoryIcon className="w-32 h-32 text-pink-300" />
+                  <CategoryIcon className="w-24 h-24 text-pink-200" />
                 </div>
               )}
             </div>
+
+            {/* Gallery Thumbnails */}
+            {product.gallery && product.gallery.length > 0 && (
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-2 scrollbar-hide">
+                <button
+                  onClick={() => setActiveImage(product.image)}
+                  className={`w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden border-2 transition-all ${activeImage === product.image ? 'border-pink-400' : 'border-transparent'
+                    }`}
+                >
+                  <img src={productHelpers.getFileUrl(product, product.image)} className="w-full h-full object-cover" alt="Main" />
+                </button>
+                {product.gallery.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    className={`w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden border-2 transition-all ${activeImage === img ? 'border-pink-400' : 'border-transparent'
+                      }`}
+                  >
+                    <img src={productHelpers.getFileUrl(product, img)} className="w-full h-full object-cover" alt={`Gallery ${idx}`} />
+                  </button>
+                ))}
+              </div>
+            )}
             {product.isNew && (
               <Badge className="absolute top-4 left-4 bg-green-400 text-white border-0 text-sm px-3 py-1">
                 Baru
@@ -298,27 +343,43 @@ export default function ProductDetail() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                size="lg"
-                className="flex-1 bg-pink-400 hover:bg-pink-500 text-white"
-                onClick={handleBuy}
-                disabled={isPaymentLoading}
-              >
-                {isPaymentLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Memproses...
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="w-5 h-5 mr-2" />
-                    Beli Sekarang
-                  </>
-                )}
-              </Button>
-              <Button size="lg" variant="outline" className="border-pink-300 text-pink-600 hover:bg-pink-50">
-                <Download className="w-5 h-5 mr-2" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              {hasPurchased ? (
+                <Button
+                  size="lg"
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white shadow-sm rounded-xl"
+                  onClick={() => {
+                    if (product.file && product.file.length > 0) {
+                      window.open(productHelpers.getFileUrl(product, product.file[0]), '_blank');
+                    } else {
+                      toast.error('File tidak tersedia untuk diunduh');
+                    }
+                  }}
+                >
+                  <Download className="w-5 h-5 mr-2" />
+                  Download File
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="flex-1 bg-pink-400 hover:bg-pink-500 text-white shadow-sm rounded-xl"
+                  onClick={handleBuy}
+                  disabled={isPaymentLoading}
+                >
+                  {isPaymentLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Memproses...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-5 h-5 mr-2" />
+                      Beli Sekarang
+                    </>
+                  )}
+                </Button>
+              )}
+              <Button size="lg" variant="outline" className="border-pink-200 text-pink-500 hover:bg-pink-50 rounded-xl px-8">
                 Preview
               </Button>
             </div>
