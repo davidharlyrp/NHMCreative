@@ -147,15 +147,6 @@ app.post('/api/payment/webhook', async (req, res) => {
     }
 });
 
-// Diagnostic route for unexpected URLs
-// Diagnostic route for unexpected URLs
-app.all('/api/payment/:path*', (req, res) => {
-    console.log('--- Unexpected Payment Route Hit ---');
-    console.log('URL:', req.url);
-    console.log('Method:', req.method);
-    res.status(404).send('Not Found - Check your Webhook URL');
-});
-
 app.listen(port, () => {
     console.log(`NHMCreative Payment Server running on http://localhost:${port}`);
 });
