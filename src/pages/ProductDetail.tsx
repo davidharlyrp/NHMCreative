@@ -97,7 +97,7 @@ export default function ProductDetail() {
 
       if (orderResult.success && orderResult.data) {
         // Initialize Xendit payment via our secure backend
-        const response = await fetch('/api/payment/create', {
+        const response = await fetch('http://100.114.4.75:2091/api/payment/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
