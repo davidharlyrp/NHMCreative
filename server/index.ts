@@ -78,21 +78,41 @@ app.post('/api/payment/create', async (req, res) => {
 // Xendit Webhook Listener
 app.post('/api/payment/webhook', async (req, res) => {
     try {
-        const { status, external_id, id } = req.body;
-        console.log(`Payment Webhook Received: ID=${id}, ExternalID=${external_id}, Status=${status}`);
+        const body = req.body;
+        const { status, external_id, id } = body;
+        console.log('--- Webhook Received ---');
+        console.log('Status:', status);
+        console.log('External ID (Order ID):', external_id);
+        console.log('Xendit Invoice ID:', id);
 
-        if (status === 'PAID') {
+        if (status === 'PAID' || status === 'SETTLED') {
             // Update PocketBase status
             try {
+                console.log('Attempting to update PocketBase for Order:', external_id);
                 const adminPb = await getAdminPB();
+
+                // Final check: verify if the record exists first for better logging
+                try {
+                    await adminPb.collection('orders').getOne(external_id);
+                    console.log('Record found in PocketBase. Proceeding with update...');
+                } catch (findError: any) {
+                    console.error(`CRITICAL: Order ID ${external_id} NOT FOUND in PocketBase!`);
+                    throw findError;
+                }
+
                 await adminPb.collection('orders').update(external_id, {
                     status: 'paid',
                     xenditInvoiceId: id
                 });
-                console.log(`Order ${external_id} updated to PAID`);
+                console.log(`SUCCESS: Order ${external_id} updated to PAID`);
             } catch (pbError: any) {
-                console.error('PocketBase Update Error:', pbError.data || pbError.message);
+                console.error('PocketBase Update FAILED:');
+                console.error('- Status:', pbError.status);
+                console.error('- Message:', pbError.message);
+                console.error('- Data:', JSON.stringify(pbError.data || {}));
             }
+        } else {
+            console.log('Ignored webhook status:', status);
         }
 
         res.status(200).send('Webhook processed');
