@@ -18,6 +18,12 @@ const xenditClient = new Xendit({
 
 const { Invoice } = xenditClient;
 
+// Initialize PocketBase for backend use
+import PocketBase from 'pocketbase';
+const pb = new PocketBase(process.env.VITE_POCKETBASE_URL);
+// Note: We might need to auth as admin if the status update is restricted
+// await pb.admins.authWithPassword(process.env.PB_ADMIN_EMAIL, process.env.PB_ADMIN_PASSWORD);
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
@@ -43,6 +49,8 @@ app.post('/api/payment/create', async (req, res) => {
             },
             currency: 'IDR',
             reminderTime: 1,
+            successRedirectUrl: `${req.headers.origin}/products`,
+            failureRedirectUrl: `${req.headers.origin}/product-detail/${orderId}`, // Or similar error page
         };
 
         const response = await Invoice.createInvoice({ data });
@@ -58,6 +66,32 @@ app.post('/api/payment/create', async (req, res) => {
             error: 'Failed to create payment invoice',
             message: error.message
         });
+    }
+});
+
+// Xendit Webhook Listener
+app.post('/api/payment/webhook', async (req, res) => {
+    try {
+        const { status, external_id, id } = req.body;
+        console.log(`Payment Webhook Received: ID=${id}, ExternalID=${external_id}, Status=${status}`);
+
+        if (status === 'PAID') {
+            // Update PocketBase status
+            try {
+                await pb.collection('orders').update(external_id, {
+                    status: 'paid',
+                    xenditInvoiceId: id
+                });
+                console.log(`Order ${external_id} updated to PAID`);
+            } catch (pbError: any) {
+                console.error('PocketBase Update Error:', pbError);
+            }
+        }
+
+        res.status(200).send('Webhook processed');
+    } catch (error: any) {
+        console.error('Webhook processing failed:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
